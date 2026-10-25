@@ -1,37 +1,44 @@
+import joblib
+
+# Load the trained machine learning model
+model = joblib.load("scam_model.joblib")
+
+
 def analyze_message(message):
-    suspicious_words = [
-        "urgent",
-        "verify account",
-        "click link",
-        "prize",
-        "otp",
-        "password",
-        "upi"
-    ]
+    prediction = model.predict([message])[0]
 
-    message_lower = message.lower()
+    probabilities = model.predict_proba([message])[0]
+    classes = list(model.classes_)
+    scam_index = classes.index("scam")
+    scam_probability = probabilities[scam_index]
 
-    found_words = [
-        word for word in suspicious_words
-        if word in message_lower
-    ]
+    risk_score = round(scam_probability * 100)
 
-    if found_words:
-        risk = min(30 + len(found_words) * 15, 90)
-        status = "Suspicious - Please verify"
+    if prediction == "scam":
+        status = "Potentially suspicious message"
     else:
-        risk = 10
-        status = "No obvious warning signs detected"
+        status = "No obvious scam pattern detected"
 
-    return status, risk, found_words
+    return status, risk_score
 
 
 if __name__ == "__main__":
-    message = input("Enter a message to analyze: ")
+    print("=== ScamSathi AI ===")
+    print("Enter 'exit' to quit.")
 
-    status, risk, words = analyze_message(message)
+    while True:
+        message = input("\nEnter a message: ")
 
-    print("\n--- ScamSathi AI ---")
-    print("Result:", status)
-    print("Risk score:", f"{risk}%")
-    print("Warning signs:", words if words else "None detected")
+        if message.strip().lower() == "exit":
+            print("Thank you for using ScamSathi AI!")
+            break
+
+        if not message.strip():
+            print("Please enter a message.")
+            continue
+
+        status, risk_score = analyze_message(message)
+
+        print("\nResult:", status)
+        print("Model scam score:", f"{risk_score}%")
+        print("Note: This is an experimental model, not proof of fraud.")
