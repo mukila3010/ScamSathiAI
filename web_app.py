@@ -7,100 +7,241 @@ st.set_page_config(
     layout="centered"
 )
 
-st.title("🛡️ ScamSathi AI")
-st.write("AI-powered suspicious message analyzer")
+# ---------- CUSTOM UI ----------
+st.markdown("""
+<style>
+.stApp {
+    background: linear-gradient(135deg, #07111f, #102a43);
+    color: white;
+}
 
-message = st.text_area(
-    "📩 Enter your message",
-    placeholder="Example: Your account will be blocked. Share your OTP immediately...",
-    height=180
-)
+.block-container {
+    max-width: 850px;
+    padding-top: 35px;
+}
 
+.hero {
+    padding: 30px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #12395b, #176b78);
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.hero h1 {
+    color: white;
+    font-size: 42px;
+    margin-bottom: 8px;
+}
+
+.hero p {
+    color: #dcecf5;
+    font-size: 17px;
+}
+
+.card {
+    background: #142b43;
+    padding: 22px;
+    border-radius: 18px;
+    border: 1px solid #31516c;
+    margin-top: 20px;
+}
+
+.tip {
+    background: #10263b;
+    padding: 18px;
+    border-radius: 15px;
+    border: 1px solid #29465d;
+}
+
+.footer {
+    text-align: center;
+    color: #9fb3c8;
+    margin-top: 30px;
+    font-size: 13px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+# ---------- EXPLANATION ----------
 def explain_message(message):
     text = message.lower()
     reasons = []
 
-    if any(word in text for word in ["urgent", "immediately", "act now", "last chance"]):
-        reasons.append("Urgent or pressure language detected")
+    patterns = {
+        "Urgent or pressure language": [
+            "urgent", "immediately", "act now", "last chance"
+        ],
+        "OTP or password request": [
+            "otp", "password", "pin", "cvv"
+        ],
+        "Prize or reward claim": [
+            "free prize", "you won", "lottery", "claim your reward"
+        ],
+        "Account threat": [
+            "account blocked", "account suspended",
+            "verify your account"
+        ],
+        "Money request": [
+            "send money", "pay now",
+            "transfer money", "processing fee"
+        ],
+        "Suspicious link wording": [
+            "click here", "http://", "https://",
+            "bit.ly", "tinyurl"
+        ]
+    }
 
-    if any(word in text for word in ["otp", "password", "pin", "cvv"]):
-        reasons.append("OTP, password, PIN or confidential information request detected")
-
-    if any(word in text for word in ["free prize", "you won", "lottery", "claim your reward"]):
-        reasons.append("Prize or reward claim detected")
-
-    if any(word in text for word in ["account blocked", "account suspended", "verify your account"]):
-        reasons.append("Account threat or verification request detected")
-
-    if any(word in text for word in ["send money", "pay now", "transfer money", "processing fee"]):
-        reasons.append("Money or payment request detected")
-
-    if any(word in text for word in ["click here", "http://", "https://", "bit.ly", "tinyurl"]):
-        reasons.append("Potentially suspicious link detected")
+    for reason, keywords in patterns.items():
+        for word in keywords:
+            if word in text:
+                reasons.append(
+                    f"⚠️ {reason}: detected '{word}'"
+                )
+                break
 
     if not reasons:
-        reasons.append("No common suspicious wording was detected")
+        reasons.append(
+            "✅ No common suspicious wording was detected."
+        )
 
     return reasons
 
 
-if st.button("🔎 Analyze Message"):
+# ---------- HEADER ----------
+st.markdown("""
+<div class="hero">
+    <h1>🛡️ ScamSathi AI</h1>
+    <p>AI-powered suspicious message analyzer</p>
+</div>
+""", unsafe_allow_html=True)
+
+
+# ---------- INPUT ----------
+st.subheader("📩 Check Your Message")
+
+st.write(
+    "Paste an SMS, email, or chat message below "
+    "to check for suspicious patterns."
+)
+
+message = st.text_area(
+    "Message",
+    placeholder="Example: Your account will be blocked. Share your OTP immediately...",
+    height=160,
+    max_chars=5000
+)
+
+
+# ---------- ANALYZE ----------
+if st.button("🔎 Analyze Message", use_container_width=True):
 
     if not message.strip():
-        st.warning("Please enter a message first.")
+
+        st.warning("⚠️ Please enter a message first.")
 
     else:
-        status, risk_score = analyze_message(message.strip())
 
-        st.divider()
+        try:
 
-        st.subheader("📋 Analysis Result")
+            with st.spinner("🤖 Analyzing your message..."):
 
-        if status == "Potentially suspicious message":
-            st.error("⚠️ " + status)
-        else:
-            st.success("✅ " + status)
+                status, risk_score = analyze_message(
+                    message.strip()
+                )
 
-        st.subheader("📊 Model Scam Score")
-        st.metric(
-            label="Estimated scam probability",
-            value=f"{risk_score}%"
-        )
+                reasons = explain_message(
+                    message.strip()
+                )
 
-        st.progress(
-            min(max(risk_score / 100, 0.0), 1.0)
-        )
+            # RESULT
+            st.markdown(
+                '<div class="card">',
+                unsafe_allow_html=True
+            )
 
-        st.caption(
-            "This is an experimental model score, not proof of fraud."
-        )
+            st.subheader("📋 Analysis Result")
 
-        st.divider()
+            if status == "Potentially suspicious message":
+                st.error("⚠️ " + status)
+            else:
+                st.success("✅ " + status)
 
-        st.subheader("🔎 Why this result?")
+            st.subheader("📊 Model Scam Score")
 
-        reasons = explain_message(message.strip())
+            st.metric(
+                "Estimated scam probability",
+                f"{risk_score}%"
+            )
 
-        for reason in reasons:
-            st.write("• " + reason)
+            st.progress(
+                min(max(risk_score / 100, 0.0), 1.0)
+            )
 
-        st.info(
-            "These are text-based warning clues. "
-            "They are not proof that a message is fraudulent."
-        )
+            st.caption(
+                "This is an experimental model score, "
+                "not proof of fraud."
+            )
+
+            st.markdown(
+                '</div>',
+                unsafe_allow_html=True
+            )
+
+            # WHY RESULT
+            st.divider()
+
+            st.subheader("🔎 Why this result?")
+
+            for reason in reasons:
+                st.write(reason)
+
+            st.info(
+                "These are text-based warning clues. "
+                "They are not proof of fraud."
+            )
+
+        except Exception as error:
+
+            st.error(
+                "❌ Analysis failed."
+            )
+
+            st.write(
+                "Please check the application configuration."
+            )
 
 
+# ---------- SAFETY ----------
 st.divider()
 
 st.subheader("🔐 Safety Tips")
 
-st.write("• Never share OTP, password or banking PIN.")
-st.write("• Avoid clicking unknown links.")
-st.write("• Verify suspicious requests through official channels.")
-st.write("• Do not send money because of urgent messages.")
+st.markdown("""
+<div class="tip">
 
-st.divider()
+<b>🛑 Never share:</b><br>
+OTP • Password • PIN • CVV
 
-st.caption(
-    "ScamSathi AI • Machine Learning Project • Stay Alert"
-)
+<br><br>
+
+<b>🔗 Be careful with:</b><br>
+Unknown links • Prize messages • Urgent payment requests
+
+<br><br>
+
+<b>✅ Always:</b><br>
+Verify suspicious messages through official sources.
+
+</div>
+""", unsafe_allow_html=True)
+
+
+# ---------- FOOTER ----------
+st.markdown("""
+<div class="footer">
+    ScamSathi AI • Machine Learning Project<br>
+    Stay Alert • Think Before You Click
+</div>
+""", unsafe_allow_html=True)
