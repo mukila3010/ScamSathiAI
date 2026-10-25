@@ -1,4 +1,4 @@
-```python
+
 import streamlit as st
 from app import analyze_message
 
@@ -214,4 +214,3 @@ st.markdown("""
     Stay alert. Think before you click.
 </div>
 """, unsafe_allow_html=True)
-```
