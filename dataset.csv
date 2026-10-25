@@ -1,0 +1,17 @@
+message,label
+"Congratulations, you won a free prize. Click here to claim",scam
+"URGENT! Verify your account immediately using this link",scam
+"Your bank account will be blocked. Share your OTP",scam
+"You have won a lottery. Pay a fee to receive your reward",scam
+"Send your password to verify your account",scam
+"Your parcel is waiting. Pay a delivery fee using this link",scam
+"Claim your free gift now",scam
+"Your account has suspicious activity. Click this link",scam
+"Can you send me the class notes?",legitimate
+"Good morning, how are you?",legitimate
+"Your meeting is scheduled for tomorrow",legitimate
+"Please call me when you are free",legitimate
+"Your college assignment is due on Monday",legitimate
+"Thank you for your help",legitimate
+"Your appointment is confirmed",legitimate
+"Let us meet at the library today",legitimate
