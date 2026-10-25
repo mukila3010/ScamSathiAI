@@ -1,15 +1,14 @@
-
+```python
 import streamlit as st
 from app import analyze_message
 
-# Page settings
 st.set_page_config(
     page_title="ScamSathi AI",
     page_icon="🛡️",
     layout="centered"
 )
 
-# Website design
+# Custom website design
 st.markdown("""
 <style>
 .stApp {
@@ -45,16 +44,9 @@ st.markdown("""
     color: white;
     border: none;
     border-radius: 10px;
-    height: 48px;
+    min-height: 48px;
     font-weight: bold;
     width: 100%;
-}
-.result-card {
-    padding: 20px;
-    border-radius: 16px;
-    background: #172b43;
-    border: 1px solid #35516d;
-    margin-top: 18px;
 }
 .footer {
     text-align: center;
@@ -66,7 +58,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# Explain suspicious message clues
+# Explain message clues
 def explain_message(message):
     text = message.lower()
     reasons = []
@@ -100,21 +92,16 @@ def explain_message(message):
 
     for reason, keywords in patterns.items():
         matched = [word for word in keywords if word in text]
-
         if matched:
-            reasons.append(
-                f"⚠️ {reason}: detected '{matched[0]}'"
-            )
+            reasons.append(f"⚠️ {reason}: '{matched[0]}'")
 
     if not reasons:
-        reasons.append(
-            "No common suspicious wording was detected."
-        )
+        reasons.append("No common suspicious wording was detected.")
 
     return reasons
 
 
-# Website header
+# Header
 st.markdown("""
 <div class="hero">
     <h1>🛡️ ScamSathi AI</h1>
@@ -123,7 +110,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.subheader("🔍 Analyze a Message")
-
 st.write("Paste an SMS, email, or chat message below.")
 
 message = st.text_area(
@@ -142,16 +128,11 @@ if st.button("🔎 Analyze Message", use_container_width=True):
     else:
         try:
             with st.spinner("Analyzing message..."):
-                status, risk_score = analyze_message(
-                    message.strip()
-                )
+                status, risk_score = analyze_message(message.strip())
                 reasons = explain_message(message.strip())
 
-            st.markdown(
-                '<div class="result-card">',
-                unsafe_allow_html=True
-            )
-
+            # Analysis result
+            st.divider()
             st.subheader("📋 Analysis Result")
 
             if status == "Potentially suspicious message":
@@ -159,9 +140,10 @@ if st.button("🔎 Analyze Message", use_container_width=True):
             else:
                 st.success("✅ " + status)
 
+            # Model score
             st.metric(
-                "Model scam score",
-                f"{risk_score}%"
+                label="Model scam score",
+                value=f"{risk_score}%"
             )
 
             st.progress(
@@ -173,9 +155,7 @@ if st.button("🔎 Analyze Message", use_container_width=True):
                 "not a verified fraud-risk measurement."
             )
 
-            st.markdown("</div>", unsafe_allow_html=True)
-
-            # Explanation section
+            # Explanation
             st.divider()
             st.subheader("🔎 Why this result?")
 
@@ -184,21 +164,18 @@ if st.button("🔎 Analyze Message", use_container_width=True):
 
             st.info(
                 "These clues are based on message wording. "
-                "They are not proof of fraud. A legitimate message "
-                "may contain similar words, and a scam may not "
-                "contain any of these clues."
+                "They are not proof of fraud. Legitimate messages "
+                "may contain similar words, and scams may not "
+                "contain these clues."
             )
 
-        except Exception as error:
-            st.error(
-                "Analysis failed. Please check the model and dataset."
-            )
-            st.caption(f"Error details: {error}")
+        except Exception:
+            st.error("Analysis failed. Please check app.py and dataset.csv.")
+            st.exception(Exception("Please check the app configuration and logs."))
 
 
 # Safety tips
 st.divider()
-
 st.subheader("🔐 Safety Tips")
 
 st.markdown("""
@@ -214,3 +191,4 @@ st.markdown("""
     Stay alert. Think before you click.
 </div>
 """, unsafe_allow_html=True)
+```
