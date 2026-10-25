@@ -1,4 +1,4 @@
-
+```python
 import streamlit as st
 from app import analyze_message
 
@@ -94,7 +94,7 @@ def explain_message(message):
         ],
         "Suspicious link wording": [
             "click here", "verify now", "http://",
-            "bit.ly", "tinyurl"
+            "https://", "bit.ly", "tinyurl"
         ]
     }
 
@@ -103,7 +103,7 @@ def explain_message(message):
 
         if matched:
             reasons.append(
-                f"{reason}: detected '{matched[0]}'"
+                f"⚠️ {reason}: detected '{matched[0]}'"
             )
 
     if not reasons:
@@ -124,9 +124,7 @@ st.markdown("""
 
 st.subheader("🔍 Analyze a Message")
 
-st.write(
-    "Paste an SMS, email, or chat message below."
-)
+st.write("Paste an SMS, email, or chat message below.")
 
 message = st.text_area(
     "Message to check",
@@ -136,7 +134,7 @@ message = st.text_area(
 )
 
 # Analyze button
-if st.button("🔎 Analyze Message"):
+if st.button("🔎 Analyze Message", use_container_width=True):
 
     if not message.strip():
         st.warning("Please enter a message first.")
@@ -147,8 +145,7 @@ if st.button("🔎 Analyze Message"):
                 status, risk_score = analyze_message(
                     message.strip()
                 )
-
-                reasons = explain_message(message)
+                reasons = explain_message(message.strip())
 
             st.markdown(
                 '<div class="result-card">',
@@ -167,7 +164,9 @@ if st.button("🔎 Analyze Message"):
                 f"{risk_score}%"
             )
 
-            st.progress(risk_score / 100)
+            st.progress(
+                max(0.0, min(1.0, risk_score / 100))
+            )
 
             st.caption(
                 "This is the model's estimated scam probability, "
@@ -177,22 +176,24 @@ if st.button("🔎 Analyze Message"):
             st.markdown("</div>", unsafe_allow_html=True)
 
             # Explanation section
+            st.divider()
             st.subheader("🔎 Why this result?")
 
             for reason in reasons:
-                st.write("•", reason)
+                st.write(f"- {reason}")
 
             st.info(
                 "These clues are based on message wording. "
-                "They are not proof of fraud, and legitimate "
-                "messages may contain similar words."
+                "They are not proof of fraud. A legitimate message "
+                "may contain similar words, and a scam may not "
+                "contain any of these clues."
             )
 
         except Exception as error:
             st.error(
                 "Analysis failed. Please check the model and dataset."
             )
-            st.caption(str(error))
+            st.caption(f"Error details: {error}")
 
 
 # Safety tips
@@ -213,3 +214,4 @@ st.markdown("""
     Stay alert. Think before you click.
 </div>
 """, unsafe_allow_html=True)
+```
