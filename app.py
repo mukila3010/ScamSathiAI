@@ -4,41 +4,32 @@ import joblib
 model = joblib.load("scam_model.joblib")
 
 
-def analyze_message(message):
-    prediction = model.predict([message])[0]
 
-    probabilities = model.predict_proba([message])[0]
-    classes = list(model.classes_)
-    scam_index = classes.index("scam")
-    scam_probability = probabilities[scam_index]
+from pathlib import Path
+import joblib
+import pandas as pd
 
-    risk_score = round(scam_probability * 100)
+from sklearn.pipeline import Pipeline
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
 
-    if prediction == "scam":
-        status = "Potentially suspicious message"
-    else:
-        status = "No obvious scam pattern detected"
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "scam_model.joblib"
+DATASET_PATH = BASE_DIR / "dataset.csv"
 
-    return status, risk_score
+# Load existing model, or train one if it is missing
+if MODEL_PATH.exists():
+    model = joblib.load(MODEL_PATH)
+else:
+    data = pd.read_csv(DATASET_PATH)
+    data = data.dropna(subset=["message", "label"])
+    data["message"] = data["message"].astype(str)
+    data["label"] = data["label"].astype(str).str.strip().str.lower()
 
+    model = Pipeline([
+        ("tfidf", TfidfVectorizer(ngram_range=(1, 2))),
+        ("classifier", LogisticRegression(max_iter=1000))
+    ])
 
-if __name__ == "__main__":
-    print("=== ScamSathi AI ===")
-    print("Enter 'exit' to quit.")
-
-    while True:
-        message = input("\nEnter a message: ")
-
-        if message.strip().lower() == "exit":
-            print("Thank you for using ScamSathi AI!")
-            break
-
-        if not message.strip():
-            print("Please enter a message.")
-            continue
-
-        status, risk_score = analyze_message(message)
-
-        print("\nResult:", status)
-        print("Model scam score:", f"{risk_score}%")
-        print("Note: This is an experimental model, not proof of fraud.")
+    model.fit(data["message"], data["label"])
+    joblib.dump(model, MODEL_PATH)
